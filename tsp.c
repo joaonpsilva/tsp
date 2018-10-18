@@ -31,6 +31,21 @@ static long n_tours;
 // first solution (brute force, distance computed at the end, compute best and worst tours)
 //
 
+void copy_arr(int s[], int d[], int n){
+  for(int i=0; i<n; i++) d[i] = s[i];
+}
+
+int tour_distance(int n, int a[]){
+  int d = 0;
+  for(int i=0; i<n-1; i++){
+    //d += cities[i].distance[i+1];
+    d += cities[a[i]].distance[a[i+1]];
+
+  }
+  d += cities[a[n-1]].distance[a[0]];
+  return d;
+}
+
 void tsp_v1(int n,int m,int *a)
 {
   int i,t;
@@ -50,11 +65,20 @@ void tsp_v1(int n,int m,int *a)
   { // visit permutation
     n_tours++;
     // modify the following code to do your stuff
-    for(i = 0;i < n;i++)
-      printf("%d%s",a[i],(i == n - 1) ? "\n" : " ");
+    // for(i = 0;i < n;i++)
+    //   printf("%d%s",a[i],(i == n - 1) ? "\n" : " ");
+    int d = tour_distance(n, a); //path length
+    if(d < min_length){
+      min_length = d;
+      //printf("New min_length: %d\n", d);
+      copy_arr(a, min_tour, n); 
+    } 
+    if(d > max_length){
+      max_length = d;
+      copy_arr(a, max_tour, n);
+    } 
   }
 }
-
 
 //
 // main program
@@ -67,37 +91,54 @@ int main(int argc,char **argv)
   double dt1;
 
   n_mec = 89234;
-  special = 1;
+  special = 0;
   init_cities_data(n_mec,special);
   printf("data for init_cities_data(%d,%d)\n",n_mec,special);
   fflush(stdout);
+
 #if 0
   print_distances();
 #endif
+  
   for(n = 3;n <= n_cities;n++)
   {
     //
     // try tsp_v1
     //
+
+    //if(n!=12) continue;
+
     dt1 = -1.0;
     if(n <= 16)
     {
       (void)elapsed_time();
+
       for(i = 0;i < n;i++)
         a[i] = i;
+
       min_length = 1000000000;
       max_length = 0;
+
       n_tours = 0l;
+
       tsp_v1(n,1,a); // no need to change the starting city, as we are making a tour
+      
       dt1 = elapsed_time();
+
+      printf("Number of cities: %d --> ", n);
+      
       printf("tsp_v1() finished in %8.3fs (%ld tours generated)\n",dt1,n_tours);
       printf("  min %5d [",min_length);
+
       for(i = 0;i < n;i++)
         printf("%2d%s",min_tour[i],(i == n - 1) ? "]\n" : ",");
       printf("  max %5d [",max_length);
+
       for(i = 0;i < n;i++)
         printf("%2d%s",max_tour[i],(i == n - 1) ? "]\n" : ",");
+      
       fflush(stdout);
+      
       if(argc == 2 && strcmp(argv[1],"-f") == 0)
       {
         min_tour[n] = -1;
@@ -109,5 +150,6 @@ int main(int argc,char **argv)
       }
     }
   }
+
   return 0;
 }
